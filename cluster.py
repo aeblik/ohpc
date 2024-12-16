@@ -15,6 +15,11 @@ def solar_model(t, params):
     x = np.zeros_like(t)
     for k in range(10):  # 10 cycles
         T0_k, Ts_k, Td_k = params[3 * k: 3 * k + 3]
+
+        # Enforce minimum thresholds for stability
+        Ts_k = max(Ts_k, 1e-6)  # Avoid division by zero
+        Td_k = max(Td_k, 1e-6)  # Avoid division by zero
+
         if k < 9:
             T0_next = params[3 * (k + 1)]
             mask = (t >= T0_k) & (t < T0_next)
@@ -86,6 +91,7 @@ def hyperparameter_task(params):
 # Parallelized function for independent SA runs
 def calibration_task(x0_noise):
     params, _ = simulated_annealing(x0_noise, best_T0, best_sigma, f=mse, n_iter=100000)
+
     return params
 
 # -------------------------------
@@ -105,8 +111,8 @@ if __name__ == "__main__":
     x0 = np.array(initial_T0 + initial_Ts + initial_Td)
 
     # Hyperparameter grid
-    T0_values = np.linspace(100, 1000, 10)  # 10 Werte zwischen 100 und 1000
-    sigma_values = np.linspace(0.8, 1.2, 5)  # 5 Werte zwischen 0.8 und 1.2 
+    T0_values = np.linspace(10, 400, 50)  # 10 Werte zwischen 100 und 1000
+    sigma_values = np.linspace(0.4, 1.2, 20)  # 5 Werte zwischen 0.8 und 1.2 
     hyperparameters = list(itertools.product(T0_values, sigma_values))
 
     # Task 1: Hyperparameter Optimization
@@ -137,4 +143,17 @@ if __name__ == "__main__":
     plt.title("Final Optimized Fit")
     plt.grid()
     plt.savefig("final_optimized_fit.png")
+    plt.show()
+
+    # Combine results: MSE values from all calibration runs
+    mse_calibration_results = [mse(params) for params in calibration_results]
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(len(mse_calibration_results)), mse_calibration_results, marker='o', label="Calibration MSE")
+    plt.xlabel("Run Index")
+    plt.ylabel("Final MSE")
+    plt.title("Final MSE for Each Calibration Run")
+    plt.grid()
+    plt.legend()
+    plt.savefig("calibration_mse_summary.png")
     plt.show()
