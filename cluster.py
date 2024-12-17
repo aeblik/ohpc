@@ -37,7 +37,7 @@ def mse(params):
 # Simulated Annealing Algorithm
 # -------------------------------
 
-def simulated_annealing(x0, T0, sigma, f, n_iter=100000):
+def simulated_annealing(x0, T0, sigma, f, n_iter=20000):
     x = x0.copy()
     T = T0
     n_params = len(x0)
@@ -69,7 +69,7 @@ def simulated_annealing(x0, T0, sigma, f, n_iter=100000):
 def hyperparameter_task(params):
     T0, sigma = params
     print(f"Testing T0={T0}, sigma={sigma}")
-    outSA, mse_history = simulated_annealing(x0, T0, sigma, f=mse, n_iter=100000)
+    outSA, mse_history = simulated_annealing(x0, T0, sigma, f=mse, n_iter=20000)
     final_loss = mse(outSA)
 
     # Save MSE evolution plot
@@ -90,7 +90,7 @@ def hyperparameter_task(params):
 
 # Parallelized function for independent SA runs
 def calibration_task(x0_noise):
-    params, _ = simulated_annealing(x0_noise, best_T0, best_sigma, f=mse, n_iter=100000)
+    params, _ = simulated_annealing(x0_noise, best_T0, best_sigma, f=mse, n_iter=20000)
 
     return params
 
@@ -105,14 +105,17 @@ if __name__ == "__main__":
     sn = data[:, 1]
 
     # Initial parameters
-    initial_T0 = [2.2, 5.0, 2.7, 1.5, 5.6, 3.5, 7.7, 3.4, 9.6, 12.2]
+    initial_T0 = [1823.3, 1833.9, 1843.5, 1856.0, 1867.2, 1878.9, 1889.6, 1901.7, 1913.6, 1923.6]
     initial_Ts = [0.3] * 10
     initial_Td = [5.0] * 10
-    x0 = np.array(initial_T0 + initial_Ts + initial_Td)
+    x0 = []
+    for i in range(10):
+        x0.extend([initial_T0[i], initial_Ts[i], initial_Td[i]])
+    x0 = np.array(x0)
 
     # Hyperparameter grid
-    T0_values = np.linspace(10, 400, 50)  # 10 Werte zwischen 100 und 1000
-    sigma_values = np.linspace(0.4, 1.2, 20)  # 5 Werte zwischen 0.8 und 1.2 
+    T0_values = np.linspace(0, 10, 10)  # 10 Werte zwischen 100 und 1000
+    sigma_values = np.linspace(10**-9, 10**-6, 10)  # 5 Werte zwischen 0.8 und 1.2 
     hyperparameters = list(itertools.product(T0_values, sigma_values))
 
     # Task 1: Hyperparameter Optimization
