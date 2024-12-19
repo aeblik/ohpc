@@ -1,0 +1,1 @@
+Non-Parallelized Execution Time: 324.21 seconds

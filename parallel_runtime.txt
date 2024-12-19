@@ -1,0 +1,1 @@
+Parallelized Execution Time Execution Time: 89.73 seconds
